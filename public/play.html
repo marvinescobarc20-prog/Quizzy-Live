@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quizzy Live</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#46178f;color:#fff;font-family:system-ui,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+#app{max-width:520px;margin:0 auto;padding:20px;text-align:center}
+input{width:100%;font:inherit;font-size:1.3rem;padding:14px;border-radius:10px;border:0;margin:6px 0;text-align:center}
+button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:14px 26px;background:#fff;color:#46178f;cursor:pointer;font-size:1.1rem;width:100%;margin-top:8px}
+.err{color:#ffd0d0;min-height:1.5em;font-weight:600}
+.top{display:flex;justify-content:space-between;font-weight:700}
+.bar{height:10px;background:#fff3;border-radius:6px;overflow:hidden;margin:10px 0}
+.bar i{display:block;height:100%;width:100%;background:#fff}
+.grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
+.ans{color:#fff;min-height:84px;font-size:1.15rem;text-align:left;display:flex;gap:10px;align-items:center}
+.big{font-size:3rem;font-weight:900}
+.mu{opacity:.8}
+</style></head>
+<body><div id="app"></div>
+<script>
+var COL=["#e21b3c","#1368ce","#d89e00","#26890c"],IC=["▲","◆","●","■"];
+var app=document.getElementById("app"),S=null,off=0,es=null,me=null;
+try{me=JSON.parse(sessionStorage.getItem("ql_me")||"null")}catch(e){}
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+
+function showJoin(msg){
+  var pin=new URLSearchParams(location.search).get("pin")||"";
+  app.innerHTML='<h1>🎯 Quizzy Live</h1><input id="pin" inputmode="numeric" maxlength="6" placeholder="PIN de la partida" value="'+esc(pin)+'"><input id="nm" maxlength="20" placeholder="Tu nombre"><button id="jn">Entrar</button><p class="err" id="er">'+esc(msg||"")+"</p>";
+  document.getElementById("jn").onclick=join;
+}
+async function join(){
+  var pin=document.getElementById("pin").value.trim(),name=document.getElementById("nm").value.trim();
+  var r=await fetch("/api/join",{method:"POST",body:JSON.stringify({pin:pin,name:name})});
+  var d=await r.json();
+  if(!r.ok){document.getElementById("er").textContent=d.error||"No se pudo entrar";return}
+  me={id:d.id,pin:pin};sessionStorage.setItem("ql_me",JSON.stringify(me));connect();
+}
+function connect(){
+  if(es)es.close();
+  es=new EventSource("/events?role=player&pin="+encodeURIComponent(me.pin)+"&id="+encodeURIComponent(me.id));
+  es.onmessage=function(e){S=JSON.parse(e.data);off=S.now?S.now-Date.now():0;render()};
+}
+function render(){
+  var s=S;
+  if(s.phase==="gone"){if(es)es.close();sessionStorage.removeItem("ql_me");me=null;showJoin("La partida terminó o cambió. Vuelve a entrar.");return}
+  var y=s.you,h="";
+  if(s.phase==="lobby")h="<h1>¡Listo, "+esc(y.name)+"!</h1><p>Espera a que el anfitrión inicie el juego…</p><p class='mu'>"+s.count+" conectados</p>";
+  else if(s.phase==="question"){
+    if(y.answered)h="<h1>✅ Respuesta enviada</h1><p>Esperando al resto…</p>";
+    else h='<div class="top"><span>'+(s.qi+1)+"/"+s.total+"</span><span>"+y.score+' pts</span></div><div class="bar"><i id="tb"></i></div><div class="grid">'+
+      s.q.options.map(function(t,i){return'<button class="ans" data-i="'+i+'" style="background:'+COL[i]+'"><b>'+IC[i]+"</b> "+esc(t)+"</button>"}).join("")+"</div>";
+  }else if(s.phase==="reveal"){
+    var l=y.last;
+    h="<h1>"+(!l||l.choice<0?"⏰ Sin respuesta":l.correct?"✅ ¡Correcto!":"❌ Incorrecto")+"</h1>"+(l&&l.correct?'<div class="big">+'+l.gain+"</div>":"")+
+      "<p>Puntaje: <b>"+y.score+"</b><br>Puesto <b>#"+y.rank+"</b> de "+s.count+"</p><p class='mu'>Mira la pantalla del anfitrión…</p>";
+  }else if(s.phase==="finished"){
+    h="<h1>🏁 ¡Fin del juego!</h1><div class='big'>#"+y.rank+"</div><p>de "+s.count+" jugadores<br>"+y.score+" puntos</p>";
+  }
+  app.innerHTML=h;
+}
+app.onclick=function(e){
+  var b=e.target.closest("[data-i]");if(!b||!S||!me)return;
+  S.you.answered=true;render();
+  fetch("/api/answer",{method:"POST",body:JSON.stringify({pin:me.pin,id:me.id,choice:+b.dataset.i})});
+};
+setInterval(function(){
+  var tb=document.getElementById("tb");
+  if(!tb||!S||S.phase!=="question")return;
+  tb.style.width=Math.max(0,(S.endsAt-(Date.now()+off))/1000/S.time*100)+"%";
+},200);
+if(me)connect();else showJoin();
+</script></body></html>
