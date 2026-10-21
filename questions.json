@@ -1,10 +1,10 @@
-[
-{"q":"¿Qué es la ética?","a":["La ciencia que estudia las estrellas","Un conjunto de leyes penales","La reflexión filosófica sobre la moral y el obrar humano","Una práctica religiosa"],"c":2,"time":20},
-{"q":"¿Qué es la integridad académica?","a":["Actuar con honestidad, responsabilidad y respeto en el trabajo académico","Sacar siempre la nota máxima","Obedecer sin cuestionar","Competir a toda costa"],"c":0,"time":20},
-{"q":"Presentar ideas ajenas como propias, sin citar la fuente, se llama:","a":["Paráfrasis","Resumen","Cita textual","Plagio"],"c":3,"time":20},
-{"q":"¿Cuál es un valor fundamental de la vida universitaria?","a":["Competencia desleal","Honestidad","Indiferencia","Privilegio"],"c":1,"time":20},
-{"q":"¿Qué responsabilidad ética tiene un docente universitario?","a":["Favorecer a sus amigos","Evitar corregir","Evaluar con imparcialidad y justicia","Cobrar por aprobar"],"c":2,"time":20},
-{"q":"Ante un conflicto de intereses, un profesional ético debe:","a":["Declararlo y actuar con transparencia","Ocultarlo","Ignorarlo","Aprovecharlo a su favor"],"c":0,"time":20},
-{"q":"¿Para qué sirve un código de ética institucional?","a":["Decorar la universidad","Reemplazar a los profesores","Subir las matrículas","Orientar la conducta y fijar normas de convivencia"],"c":3,"time":20},
-{"q":"La educación superior debe formar profesionales:","a":["Solo técnicamente competentes","Competentes y socialmente responsables","Enfocados únicamente en ganar dinero","Sin criterio propio"],"c":1,"time":20}
-]
+[{"q":"¿Cuál es la relación más simple entre ética y moral?","a":["La ética es la reflexión filosófica que estudia la moral","Son conceptos opuestos que nunca se relacionan","La moral es la ciencia que estudia la ética","La ética solo se aplica a las leyes del Estado"],"c":0,"time":20},
+{"q":"Según la literatura, la formación ética en la educación superior debería ser:","a":["Un curso optativo de un solo semestre","Transversal a lo largo del currículo","Exclusiva de las carreras de humanidades","Responsabilidad solo de los estudiantes"],"c":1,"time":20},
+{"q":"¿Cuál de estos NO es un valor fundamental de la integridad académica?","a":["Honestidad","Confianza","Responsabilidad","Competencia desleal"],"c":3,"time":20},
+{"q":"¿Cuál es un ejemplo de deshonestidad académica?","a":["Citar correctamente una fuente","Comprar un trabajo y entregarlo como propio","Pedir tutoría al profesor","Usar normas de referencia"],"c":1,"time":20},
+{"q":"Además de transmitir conocimientos, la ética docente implica:","a":["Evitar cualquier trato con los estudiantes","Seguir las modas pedagógicas","Comprometerse con la formación integral del estudiante como ciudadano","Explicar solo el contenido de la materia"],"c":2,"time":20},
+{"q":"La fabricación, la falsificación y el plagio son consideradas en la investigación:","a":["Mala conducta científica","Buenas prácticas de publicación","Métodos válidos de análisis","Tipos de revisión por pares"],"c":0,"time":20},
+{"q":"Según Vallaeys, ¿cuál NO es uno de los cuatro impactos de la universidad?","a":["Educativos","Cognitivos","Publicitarios","Sociales"],"c":2,"time":20},
+{"q":"¿Cómo definió la CRES 2018 (Córdoba) a la educación superior?","a":["Un servicio que debe generar lucro","Un privilegio para pocas personas","Una mercancía regulada por el mercado","Un bien público social, un derecho humano y universal, y un deber del Estado"],"c":3,"time":20},
+{"q":"La guía de la UNESCO (2023) sobre IA generativa propone un límite de edad de:","a":["8 años","10 años","13 años","18 años"],"c":2,"time":20},
+{"q":"¿Qué enfoque sugiere la literatura reciente frente a la IA generativa en la universidad?","a":["Prohibirla totalmente","Políticas claras, formación ética y rediseño de las evaluaciones","Ignorarla","Permitirla sin ninguna regla"],"c":1,"time":20}
