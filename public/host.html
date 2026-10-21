@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quizzy Live – Anfitrión</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#46178f;color:#fff;font-family:system-ui,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+#app{max-width:1000px;margin:0 auto;padding:24px}
+h1,h2{text-align:center}
+button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:14px 26px;background:#fff;color:#46178f;cursor:pointer;font-size:1.1rem}
+button:disabled{opacity:.5;cursor:default}
+.lobby{display:flex;gap:28px;align-items:center;justify-content:center;flex-wrap:wrap;text-align:center}
+.url{font-size:1.6rem;font-weight:800;background:#0004;padding:8px 16px;border-radius:10px;display:inline-block;word-break:break-all}
+.pin{font-size:5rem;font-weight:900;letter-spacing:.15em}
+#qr{background:#fff;padding:12px;border-radius:12px;min-width:224px;min-height:224px;color:#333;display:flex;align-items:center;justify-content:center;text-align:center;font-size:.9rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.chips span{background:#fff2;padding:6px 14px;border-radius:20px;font-weight:600}
+.row{display:flex;gap:10px;justify-content:center;margin:18px 0}
+.top{display:flex;justify-content:space-between;font-size:1.2rem;font-weight:700}
+.bar{height:12px;background:#fff3;border-radius:6px;overflow:hidden;margin:10px 0}
+.bar i{display:block;height:100%;width:100%;background:#fff}
+.q{font-size:2rem;font-weight:800;text-align:center;margin:22px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt{padding:22px;border-radius:12px;font-size:1.3rem;font-weight:700;display:flex;justify-content:space-between;gap:10px}
+.opt.bad{opacity:.35}.opt.good{outline:5px solid #fff}
+ol{font-size:1.5rem;line-height:1.9;max-width:520px;margin:12px auto}
+@media(max-width:600px){.grid{grid-template-columns:1fr}.pin{font-size:3.5rem}}
+</style></head>
+<body><div id="app"><h1>Cargando…</h1></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+var COL=["#e21b3c","#1368ce","#d89e00","#26890c"],IC=["▲","◆","●","■"];
+var app=document.getElementById("app"),S=null,key="",off=0,base="";
+function $(i){return document.getElementById(i)}
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+var KEY=sessionStorage.getItem("ql_key")||"";
+function act(a){fetch("/api/host/"+a,{method:"POST",body:"{}",headers:{"x-host-key":KEY}})}
+async function init(){
+  var r;
+  for(var t=0;t<3;t++){
+    if(!KEY){KEY=prompt("Clave de anfitrión:")||"";}
+    r=await fetch("/api/host/new",{method:"POST",body:"{}",headers:{"x-host-key":KEY}});
+    if(r.status!==403)break;KEY="";
+  }
+  if(r.status===403){app.innerHTML="<h1>Clave incorrecta. Recarga la página.</h1>";return}
+  sessionStorage.setItem("ql_key",KEY);
+  base=location.origin;
+  var es=new EventSource("/events?role=host&key="+encodeURIComponent(KEY));
+  es.onmessage=function(e){S=JSON.parse(e.data);off=S.now-Date.now();render()};
+}
+function render(){
+  if(S.phase==="gone"){app.innerHTML="<h1>La partida se cerró. Recarga la página.</h1>";return}
+  var k=S.phase+":"+S.qi;
+  if(k!==key){key=k;build()}
+  update();
+}
+function opts(reveal){
+  return S.q.options.map(function(t,i){
+    var c="opt"+(reveal?(i===S.correct?" good":" bad"):"");
+    return '<div class="'+c+'" style="background:'+COL[i]+'"><span>'+IC[i]+" "+esc(t)+"</span>"+(reveal?"<b>"+S.counts[i]+"</b>":"")+"</div>";
+  }).join("");
+}
+function topList(){return "<ol>"+S.top.map(function(p){return"<li>"+esc(p.name)+" — <b>"+p.score+"</b></li>"}).join("")+"</ol>"}
+function build(){
+  var s=S;
+  if(s.phase==="lobby"){
+    app.innerHTML='<div class="lobby"><div><p>1. Escanea el QR o entra a</p><div class="url">'+esc(base)+'/play</div><p>2. Escribe el PIN</p><div class="pin">'+s.pin+'</div></div><div id="qr"></div></div>'+
+    '<h2 id="cnt"></h2><div id="pl" class="chips"></div><div class="row"><button id="go">Iniciar juego</button></div>';
+    $("go").onclick=function(){act("start")};
+    var q=$("qr");
+    if(window.QRCode)new QRCode(q,{text:base+"/play?pin="+s.pin,width:200,height:200});
+    else q.textContent="No se pudo dibujar el QR. Escribe la dirección y el PIN.";
+  }else if(s.phase==="question"){
+    app.innerHTML='<div class="top"><span>Pregunta '+(s.qi+1)+" / "+s.total+'</span><span id="ans"></span><span id="tm"></span></div><div class="bar"><i id="tb"></i></div><div class="q">'+esc(s.q.text)+'</div><div class="grid">'+opts(false)+'</div><div class="row"><button id="sk">Mostrar resultado</button></div>';
+    $("sk").onclick=function(){act("reveal")};
+  }else if(s.phase==="reveal"){
+    var last=s.qi+1>=s.total;
+    app.innerHTML='<div class="top"><span>Pregunta '+(s.qi+1)+" / "+s.total+'</span></div><div class="q">'+esc(s.q.text)+'</div><div class="grid">'+opts(true)+'</div><h2>🏆 Top 5</h2>'+topList()+'<div class="row"><button id="nx">'+(last?"Ver podio final":"Siguiente pregunta ➜")+"</button></div>";
+    $("nx").onclick=function(){act("next")};
+  }else if(s.phase==="finished"){
+    app.innerHTML="<h1>🎉 ¡Resultados finales!</h1>"+topList()+'<div class="row"><button onclick="location.reload()">Nueva partida</button></div>';
+  }
+}
+function update(){
+  if(S.phase==="lobby"){
+    $("cnt").textContent=S.count+(S.count===1?" jugador conectado":" jugadores conectados");
+    $("pl").innerHTML=S.players.map(function(n){return"<span>"+esc(n)+"</span>"}).join("");
+    $("go").disabled=S.count<1;
+  }else if(S.phase==="question"){
+    $("ans").textContent="Respondieron "+S.answered+" / "+S.count;
+  }
+}
+setInterval(function(){
+  if(!S||S.phase!=="question"||!$("tm"))return;
+  var left=Math.max(0,(S.endsAt-(Date.now()+off))/1000);
+  $("tm").textContent=Math.ceil(left)+" s";$("tb").style.width=(left/S.time*100)+"%";
+},200);
+init();
+</script></body></html>
